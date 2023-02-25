@@ -48,7 +48,7 @@ def create_db(name):
     dbcur.execute(f"""CREATE TABLE IF NOT EXISTS streams(
             id INTEGER AUTO_INCREMENT,
             name TEXT,
-            classroom_linx TEXT,
+            classroom_link TEXT,
             PRIMARY KEY (id)
         )""")
     dbcur.execute(f"""CREATE TABLE IF NOT EXISTS courses(
@@ -81,7 +81,7 @@ app = flask.Flask(__name__)
 
 
 @app.route("/api/courses/")
-def f1():
+def req_courses():
     query = flask.request.args.to_dict()
     id, stream_id, name, teacher_id = None, None, None, None
     if 'id' in query:
@@ -93,7 +93,65 @@ def f1():
     if 'teacher_id' in query:
         teacher_id = query['teacher_id']
     # json string
-    return calc_request(courses, id, stream_id, name, teacher_id)
+    return calc_request('courses', id, stream_id, name, teacher_id)
+
+
+def req_streams():
+    query = flask.request.args.to_dict()
+    id, name, classroom_link = None, None, None
+    if 'id' in query:
+        id = query['id']
+    if 'name' in query:
+        name = query['name']
+    if 'classroom_link' in query:
+        classroom_link = query['classroom_link']
+    # json string
+    return calc_request('streams', id, name, classroom_link)
+
+
+def req_people():
+    query = flask.request.args.to_dict()
+    id, name, github_name, stream_id = None, None, None, None
+    if 'id' in query:
+        id = query['id']
+    if 'name' in query:
+        name = query['name']
+    if 'github_name' in query:
+        github_name = query['github_name']
+    if 'stream_id' in query:
+        stream_id = query['stream_id']
+    # json string
+    return calc_request('people', id, name, github_name, stream_id)
+
+
+def req_teachers():
+    query = flask.request.args.to_dict()
+    id, login, password, name = None, None, None, None
+    if 'id' in query:
+        id = query['id']
+    if 'login' in query:
+        login = query['login']
+    if 'password' in query:
+        password = query['password']
+    if 'name' in query:
+        name = query['name']
+    # json string
+    return calc_request('teachers', id, login, password, name)
+
+
+def req_tasks():
+    query = flask.request.args.to_dict()
+    id, login, password, name = None, None, None, None
+    if 'id' in query:
+        id = query['id']
+    if 'login' in query:
+        login = query['login']
+    if 'password' in query:
+        password = query['password']
+    if 'name' in query:
+        name = query['name']
+    # json string
+    return calc_request('tasks', id, login, password, name)
 
 
 if __name__ == '__main__':
