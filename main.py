@@ -7,7 +7,8 @@ def get_hash_password(s):
     return hash(s)
 
 
-def calc_request(s, args*):
+def calc_request(s, args**):
+    pass
 
 
 class Parser_csv():
@@ -95,105 +96,52 @@ def create_db(name):
 app = flask.Flask(__name__)
 
 
-@app.route("/api/courses/", methods=['get', 'create'], defaults={'id':})
-def req_courses():
-    query = flask.request.args.to_dict()
-    id, stream_id, name, teacher_id = None, None, None, None
-    if 'id' in query:
-        id = query['id']
-    if 'stream_id' in query:
-        stream_id = query['stream_id']
-    if 'name' in query:
-        name = query['name']
-    if 'teacher_id' in query:
-        teacher_id = query['teacher_id']
-    # json string
-    return calc_request('courses', id, stream_id, name, teacher_id)
+@app.route("/api/courses/", methods=['get', 'create'], defaults={'id': None, 'stream_id': None, 'name': None, 'teacher_id': None})
+def req_courses(id, stream_id, name, teacher_id):
+    if flask.request.method == 'get':
+        return calc_request('courses', id, stream_id, name, teacher_id)
+    elif flask.request.method == 'create':
+        pass
 
 
-@app.route("/api/streams/", methods=['get', 'create'])
-def req_streams():
-    query = flask.request.args.to_dict()
-    id, name, classroom_link = None, None, None
-    if 'id' in query:
-        id = query['id']
-    if 'name' in query:
-        name = query['name']
-    if 'classroom_link' in query:
-        classroom_link = query['classroom_link']
-    # json string
-    return calc_request('streams', id, name, classroom_link)
+@app.route("/api/streams/", methods=['get', 'create'], defaults={'id': None, 'name': None, 'classroom': None})
+def req_streams(id, name, classroom_link):
+    if flask.request.method == 'get':
+        return calc_request('streams', id, name, classroom_link)
+    elif flask.request.method == 'create':
+        pass
 
 
-@app.route("/api/people/", methods=['get', 'create'])
-def req_people():
-    query = flask.request.args.to_dict()
-    id, name, github_name, stream_id = None, None, None, None
-    if 'id' in query:
-        id = query['id']
-    if 'name' in query:
-        name = query['name']
-    if 'github_name' in query:
-        github_name = query['github_name']
-    if 'stream_id' in query:
-        stream_id = query['stream_id']
-    # json string
-    return calc_request('people', id, name, github_name, stream_id)
+@app.route("/api/people/", methods=['get', 'create'], defaults={'id': None, 'name': None, 'github_name': None, 'stream_id': None})
+def req_people(id, name, github_name, stream_id):
+    if flask.request.method == 'get':
+        return calc_request('people', id, name, github_name, stream_id)
+    elif flask.request.method == 'create':
+        pass
 
 
-@app.route("/api/teachers/", methods=['get', 'create'])
-def req_teachers():
-    query = flask.request.args.to_dict()
-    id, login, password, name = None, None, None, None
-    if 'id' in query:
-        id = query['id']
-    if 'login' in query:
-        login = query['login']
-    if 'password' in query:
-        password = query['password']
-    if 'name' in query:
-        name = query['name']
-    # json string
-    return calc_request('teachers', id, login, password, name)
+@app.route("/api/teachers/", methods=['get', 'create'], defaults={'id': None, 'login': None, 'password': None, 'name': None})
+def req_teachers(id, login, password, name):
+    if flask.request.method == 'get':
+        return calc_request('teachers', id, login, password, name)
+    elif flask.request.method == 'create':
+        pass
 
 
-@app.route("/api/tasks/", methods=['get', 'create'])
-def req_tasks():
-    query = flask.request.args.to_dict()
-    id, course_id, stream_id, start_date, deadline_date, name = None, None, None, None, None, None
-    if 'id' in query:
-        id = query['id']
-    if 'course_id' in query:
-        course_id = query['course_id']
-    if 'stream_id' in query:
-        stream_id = query['stream_id']
-    if 'start_date' in query:
-        start_date = query['start_date']
-    if 'deadline_date' in query:
-        deadline_date = query['deadline_date']
-    if 'name' in query:
-        name = query['name']
-    # json string
-    return calc_request('tasks', id, course_id, stream_id, start_date, deadline_date)
+@app.route("/api/tasks/", methods=['get', 'create'], defaults={'id': None, 'course_id': None, 'stream_id': None, 'start_date': None, 'deadline_date': None, 'name': None})
+def req_tasks(id, course_id, stream_id, start_date, deadline_date, name):
+    if flask.request.method == 'get':
+        return calc_request('tasks', id, course_id, stream_id, start_date, deadline_date, name)
+    elif flask.request.method == 'create':
+        pass
 
 
-@app.route("/api/solutions/", methods=['get', 'create'])
-def req_solutions():
-    query = flask.request.args.to_dict()
-    id, task_id, people_id, status, github_link, task_id = None, None, None, None, None, None
-    if 'id' in query:
-        id = query['id']
-    if 'task_id' in query:
-        task_id = query['task_id']
-    if 'people_id' in query:
-        people_id = query['people_id']
-    if 'status' in query:
-        status = query['status']
-    if 'github_link' in query:
-        github_link = query['github_link']
-    if 'task_id' in query:
-        task_id = query['task_id']
-    return calc_request('solutions', id, task_id, people_id, status, github_link, task_id)
+@app.route("/api/solutions/", methods=['get', 'create'], defaults={'id': None, 'task_id': None, 'people_id': None, 'status': None, 'github_link': None})
+def req_solutions(id, task_id, people_id, status, github_link):
+    if flask.request.method == 'get':
+        return calc_request('solutions', id, task_id, people_id, status, github_link, task_id)
+    elif flask.request.method == 'create':
+        pass
 
 
 if __name__ == '__main__':
