@@ -16,16 +16,39 @@ def calc_request(s, args):
             else:
                 params.append(f'{key} = {val}')
     params = ' AND '.join(params)
-    con = sqlite3.connect('syspro.db')
-    cur = con.cursor()
+    dbcon = sqlite3.connect('syspro.db')
+    dbcur = dbcon.cursor()
     if params:
-        cur.execute(f"SELECT * FROM {s} WHERE {params};")
+        dbcur.execute(f"SELECT * FROM {s} WHERE {params};")
     else:
-        cur.execute(f"SELECT * FROM {s}")
-    res = cur.fetchall()
-    cur.close()
-    con.close()
+        dbcur.execute(f"SELECT * FROM {s}")
+    res = dbcur.fetchall()
+    dbcur.close()
+    dbcon.close()
     return res
+
+
+def adding_el_to_table(s, args):
+    dbcon = sqlite3.connect('syspro.db')
+    dbcur = dbcon.cursor()
+    template = '('
+    args_template = '('
+    for key, val in args.items():
+        if val != None:
+            template = template+key+', '
+            if isinstance(val, str):
+                args_template = args_template+f'"{val}", '
+            else:
+                args_template = args_template+f'{val}, '
+    template = template+')'
+    args_template = args_template+')'
+    if template != '()':
+        template = template[:-3]+')'
+        args_template = args_template[:-3]+')'
+        dbcur.execute(f"INSERT INTO {s} {template} VALUES {args_template}")
+        dbcon.commit()
+    dbcur.close()
+    dbcon.close()
 
 
 class Parser_csv():
@@ -48,16 +71,16 @@ class Parser_csv():
 
 
 def download_csv_to_db(db, file):
-    con = sqlite3.connect(db)
+    dbcon = sqlite3.connect(db)
     parser = Parser_csv()
     ar = parser.file_to_list_of_tuple(file)
-    parser.download_list_to_table(con, 'people', ar)
-    con.close()
+    parser.download_list_to_table(dbcon, 'people', ar)
+    dbcon.close()
 
 
 def create_db(name):
-    con = sqlite3.connect(name)
-    dbcur = con.cursor()
+    dbcon = sqlite3.connect(name)
+    dbcur = dbcon.cursor()
     dbcur.execute(f"""CREATE TABLE IF NOT EXISTS people(
             id INTEGER ,
             name TEXT,
@@ -109,9 +132,9 @@ def create_db(name):
             FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE,
             FOREIGN KEY (people_id) REFERENCES people (id) ON DELETE CASCADE
         )""")
-    con.commit()
+    dbcon.commit()
     dbcur.close()
-    con.close()
+    dbcon.close()
 
 
 app = flask.Flask(__name__)
@@ -122,7 +145,7 @@ def req_courses(id, stream_id, name, teacher_id):
     if flask.request.method == 'get':
         return calc_request('courses', flask.request.args.to_dict())
     elif flask.request.method == 'create':
-        pass
+        adding_el_to_table('courses', flask.request.args.to_dict())
 
 
 @app.route("/api/streams/", methods=['get', 'create'], defaults={'id': None, 'name': None, 'classroom': None})
@@ -130,7 +153,7 @@ def req_streams(id, name, classroom_link):
     if flask.request.method == 'get':
         return calc_request('streams', flask.request.args.to_dict())
     elif flask.request.method == 'create':
-        pass
+        adding_el_to_table('streams', flask.request.args.to_dict())
 
 
 @app.route("/api/people/", methods=['get', 'create'], defaults={'id': None, 'name': None, 'github_name': None, 'stream_id': None})
@@ -138,7 +161,7 @@ def req_people(id, name, github_name, stream_id):
     if flask.request.method == 'get':
         return calc_request('people', flask.request.args.to_dict())
     elif flask.request.method == 'create':
-        pass
+        adding_el_to_table('people', flask.request.args.to_dict())
 
 
 @app.route("/api/teachers/", methods=['get', 'create'], defaults={'id': None, 'login': None, 'password': None, 'name': None})
@@ -146,7 +169,7 @@ def req_teachers(id, login, password, name):
     if flask.request.method == 'get':
         return calc_request('teachers', flask.request.args.to_dict())
     elif flask.request.method == 'create':
-        pass
+        adding_el_to_table('teachers', flask.request.args.to_dict())
 
 
 @app.route("/api/tasks/", methods=['get', 'create'], defaults={'id': None, 'course_id': None, 'stream_id': None, 'start_date': None, 'deadline_date': None, 'name': None})
@@ -154,7 +177,7 @@ def req_tasks(id, course_id, stream_id, start_date, deadline_date, name):
     if flask.request.method == 'get':
         return calc_request('tasks', flask.request.args.to_dict())
     elif flask.request.method == 'create':
-        pass
+        adding_el_to_table('tasks', flask.request.args.to_dict())
 
 
 @app.route("/api/solutions/", methods=['get', 'create'], defaults={'id': None, 'task_id': None, 'people_id': None, 'status': None, 'github_link': None})
@@ -162,7 +185,7 @@ def req_solutions(id, task_id, people_id, status, github_link):
     if flask.request.method == 'get':
         return calc_request('solutions', flask.request.args.to_dict())
     elif flask.request.method == 'create':
-        pass
+        adding_el_to_table('solutions', flask.request.args.to_dict())
 
 
 if __name__ == '__main__':
