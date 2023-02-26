@@ -1,4 +1,6 @@
 import csv
+import datetime
+import hashlib
 import json
 import sqlite3
 import time
@@ -7,7 +9,7 @@ import flask
 
 
 def get_hash_password(s):
-    return hash(s)
+    return hashlib.sha3_256(s.encode()).hexdigest()
 
 
 def check_hash(cur_hash):
@@ -15,8 +17,7 @@ def check_hash(cur_hash):
         return False
     dbcon = sqlite3.connect('syspro.db')
     dbcur = dbcon.cursor()
-    dbcur.execute(f"SELECT password FROM teachers")
-    hashes = dbcur.fetchall()
+    hashes = dbcur.execute(f"SELECT password FROM teachers").fetchone()
     dbcur.close()
     dbcon.close()
     return cur_hash in hashes
@@ -45,11 +46,11 @@ def calc_request(s, args):
 
 
 def delete_el(s, args):
-    if not check_hash(args['hash']):
+    if not check_hash(args.get("hash")):
         flask.abort(403)
     params = []
     for key, val in args.items():
-        if val is not None:
+        if val is not None and key not in ['hash', 'del']:
             if isinstance(val, str):
                 params.append(f'{key} = "{val}"')
             else:
@@ -69,27 +70,24 @@ def delete_el(s, args):
 
 
 def get_time():
-    return int(time.time() * 1000)
+    tm = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(hours=7)
+    return int(tm.timestamp() * 1000)
 
 
 def add_update_solution(args):
     dbcon = sqlite3.connect('syspro.db')
     dbcur = dbcon.cursor()
-    params = []
-    num = 0
+    num = len([v for k, v in args.items() if v is not None and k not in ['del', 'hash']])
 
-    for val in args.values():
-        if val is not None:
-            num += 1
     if num == 2 and 'id' in args and 'status' in args:
         el_time = get_time()
         el = {'date': el_time, 'status': args['status']}
-        dbcur.execute(f'SELECT updates FROM solution WHERE id={args["id"]}')
-        updates = dbcur.fetchone()
+        dbcur.execute(f'SELECT updates FROM solutions WHERE id={args["id"]}')
+        updates = dbcur.fetchone()[0]
         js_obj = json.loads(updates)
         js_obj['updates'].append(el)
         dbcur.execute(
-            f'UPDATE solutions SET updates = "{str(js_obj)}", status = "{args["status"]}" WHERE id = {int(args["id"])}')
+            f"UPDATE solutions SET updates = '{json.dumps(js_obj)}', status = '{args['status']}' WHERE id = {int(args['id'])}")
         dbcon.commit()
     else:
         adding_el_to_table('solutions', args)
@@ -98,14 +96,14 @@ def add_update_solution(args):
 
 
 def adding_el_to_table(s, args):
-    if not check_hash(args['hash']):
+    if not check_hash(args.get("hash")):
         flask.abort(403)
     dbcon = sqlite3.connect('syspro.db')
     dbcur = dbcon.cursor()
     template = '('
     args_template = '('
     for key, val in args.items():
-        if val is not None and key != 'id':
+        if val is not None and key not in ['id', 'hash']:
             template = template + key + ', '
             if isinstance(val, str):
                 args_template = args_template + f'"{val}", '
