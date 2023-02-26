@@ -10,7 +10,7 @@ def get_hash_password(s):
 def calc_request(s, args):
     params = []
     for key, val in args.items():
-        if val != None:
+        if val is not None:
             if isinstance(val, str):
                 params.append(f'{key} = "{val}"')
             else:
@@ -34,7 +34,7 @@ def adding_el_to_table(s, args):
     template = '('
     args_template = '('
     for key, val in args.items():
-        if val != None:
+        if val is not None:
             template = template+key+', '
             if isinstance(val, str):
                 args_template = args_template+f'"{val}", '
