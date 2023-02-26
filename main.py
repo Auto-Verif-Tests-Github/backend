@@ -3,10 +3,18 @@ import sqlite3
 import csv
 
 
+
+#chanfe lastcomm
 def get_hash_password(s):
     return hash(s)
-
-
+def check_hash(cur_hash):
+    dbcon = sqlite3.connect('syspro.db')
+    dbcur = dbcon.cursor()
+    dbcur.execute(f"SELECT password FROM teachers")
+    hashes = dbcur.fetchall()
+    dbcur.close()
+    dbcon.close()
+    return cur_hash in hashes
 def calc_request(s, args):
     params = []
     for key, val in args.items():
@@ -28,6 +36,8 @@ def calc_request(s, args):
     dbcon.close()
     return rows
 def delete_el(s, args):
+    if not(args['hash']) or not(check_hash(args['hash'])):
+        flask.abort(403)
     params = []
     for key, val in args.items():
         if val is not None:
@@ -49,12 +59,14 @@ def delete_el(s, args):
     dbcon.close()
 
 def adding_el_to_table(s, args):
+    if not(args['hash']) or not(check_hash(args['hash'])):
+        flask.abort(403)
     dbcon = sqlite3.connect('syspro.db')
     dbcur = dbcon.cursor()
     template = '('
     args_template = '('
     for key, val in args.items():
-        if val is not None:
+        if val is not None and key!='id':
             template = template+key+', '
             if isinstance(val, str):
                 args_template = args_template+f'"{val}", '
@@ -160,63 +172,65 @@ def create_db(name):
 app = flask.Flask(__name__)
 
 
-@app.route("/api/courses/")
+@app.route("/api/courses/",methods=['GET', 'POST'])
 def req_courses():
-    if flask.request.args['del']:
+    if flask.request.args['del'] and flask.request.method == 'POST':
         delete_el('courses',flask.request.args.to_dict())
     elif flask.request.method == 'GET':
         return calc_request('courses', flask.request.args.to_dict())
-    elif flask.request.method == 'POST' and not(flask.request.args['id']):
+    elif flask.request.method == 'POST':
         adding_el_to_table('courses', flask.request.args.to_dict())
     return str({"response": 1})
 
-@app.route("/api/streams/")
+@app.route("/api/streams/",methods=['GET', 'POST'])
 def req_streams():
-    if flask.request.args['del']:
+    if flask.request.args['del'] and flask.request.method == 'POST':
         delete_el('streams',flask.request.args.to_dict())
     elif flask.request.method == 'GET':
         return calc_request('streams', flask.request.args.to_dict())
-    elif flask.request.method == 'POST' and not(flask.request.args['id']):
+    elif flask.request.method == 'POST':
         adding_el_to_table('streams', flask.request.args.to_dict())
     return str({"response": 1})
 #@app.route("/api/streams/?del=1")
-@app.route("/api/people/")
+@app.route("/api/people/",methods=['GET', 'POST'])
 def req_people():
-    if flask.request.args['del']:
+    if flask.request.args['del'] and flask.request.method == 'POST':
         delete_el('people',flask.request.args.to_dict())
     elif flask.request.method == 'GET':
         return calc_request('people', flask.request.args.to_dict())
-    elif flask.request.method == 'POST' and not(flask.request.args['id']):
+    elif flask.request.method == 'POST':
         adding_el_to_table('people', flask.request.args.to_dict())
     return str({"response": 1})
 
-@app.route("/api/teachers/")
+@app.route("/api/teachers/",methods=['GET', 'POST'])
 def req_teachers():
-    if flask.request.args['del']:
+    if flask.request.args['password']:
+        flask.request.args['password']=get_hash_password(flask.request.args['password'])
+    if flask.request.args['del'] and flask.request.method == 'POST':
         delete_el('teachers',flask.request.args.to_dict())
     elif flask.request.method == 'GET':
         return calc_request('teachers', flask.request.args.to_dict())
     elif flask.request.method == 'POST':
         adding_el_to_table('teachers', flask.request.args.to_dict())
     return str({"response": 1})
-@app.route("/api/tasks/")
+@app.route("/api/tasks/",methods=['GET', 'POST'])
 def req_tasks():
-    if flask.request.args['del']:
+    if flask.request.args['del'] and flask.request.method == 'POST':
         delete_el('tasks', flask.request.args.to_dict())
     elif flask.request.method == 'GET':
         return calc_request('tasks', flask.request.args.to_dict())
-    elif flask.request.method == 'POST' and not(flask.request.args['id']):
+    elif flask.request.method == 'POST':
         adding_el_to_table('tasks', flask.request.args.to_dict())
     return str({"response": 1})
 
 
-@app.route("/api/solutions/")
+@app.route("/api/solutions/",methods=['GET', 'POST'])
 def req_solutions():
-    if flask.request.args['del']:
+    if flask.request.args['del'] and flask.request.method == 'POST':
         delete_el('solutions',flask.request.args.to_dict())
     elif flask.request.method == 'GET':
         return calc_request('solutions', flask.request.args.to_dict())
-    elif flask.request.method == 'POST' and not(flask.request.args['id']):
+    elif flask.request.method == 'POST':
         adding_el_to_table('solutions', flask.request.args.to_dict())
     return str({"response": 1})
 
