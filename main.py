@@ -22,10 +22,11 @@ def calc_request(s, args):
         dbcur.execute(f"SELECT * FROM {s} WHERE {params};")
     else:
         dbcur.execute(f"SELECT * FROM {s}")
-    res = dbcur.fetchall()
+    columns = [col[0] for col in dbcur.description]
+    rows = {'items': [dict(zip(columns, row)) for row in dbcur.fetchall()]}
     dbcur.close()
     dbcon.close()
-    return res
+    return rows
 
 
 def adding_el_to_table(s, args):
@@ -140,56 +141,55 @@ def create_db(name):
 app = flask.Flask(__name__)
 
 
-@app.route("/api/courses/", methods=['GET', 'POST'], defaults={'id': None, 'stream_id': None, 'name': None, 'teacher_id': None})
-def req_courses(id, stream_id, name, teacher_id):
+@app.route("/api/courses/")
+def req_courses():
     if flask.request.method == 'GET':
         return calc_request('courses', flask.request.args.to_dict())
     elif flask.request.method == 'POST':
         adding_el_to_table('courses', flask.request.args.to_dict())
+    return str({"response": 1})
 
-
-@app.route("/api/streams/", methods=['GET', 'POST'], defaults={'id': None, 'name': None, 'classroom': None})
-def req_streams(id, name, classroom_link):
+@app.route("/api/streams/")
+def req_streams():
     if flask.request.method == 'GET':
         return calc_request('streams', flask.request.args.to_dict())
     elif flask.request.method == 'POST':
         adding_el_to_table('streams', flask.request.args.to_dict())
+    return str({"response": 1})
 
-
-@app.route("/api/people/", methods=['GET', 'POST'], defaults={'id': None, 'name': None, 'github_name': None, 'stream_id': None})
-def req_people(id, name, github_name, stream_id):
+@app.route("/api/people/")
+def req_people():
     if flask.request.method == 'GET':
         return calc_request('people', flask.request.args.to_dict())
     elif flask.request.method == 'POST':
         adding_el_to_table('people', flask.request.args.to_dict())
+    return str({"response": 1})
 
-
-@app.route("/api/teachers/", methods=['GET', 'POST'], defaults={'id': None, 'login': None, 'password': None, 'name': None})
-def req_teachers(id, login, password, name):
-    print(flask.request.method)
+@app.route("/api/teachers/")
+def req_teachers():
     if flask.request.method == 'GET':
         return calc_request('teachers', flask.request.args.to_dict())
     elif flask.request.method == 'POST':
         adding_el_to_table('teachers', flask.request.args.to_dict())
     return str({"response": 1})
-
-
-@app.route("/api/tasks/", methods=['GET', 'POST'], defaults={'id': None, 'course_id': None, 'stream_id': None, 'start_date': None, 'deadline_date': None, 'name': None})
-def req_tasks(id, course_id, stream_id, start_date, deadline_date, name):
+@app.route("/api/tasks/")
+def req_tasks():
     if flask.request.method == 'GET':
         return calc_request('tasks', flask.request.args.to_dict())
     elif flask.request.method == 'POST':
         adding_el_to_table('tasks', flask.request.args.to_dict())
+    return str({"response": 1})
 
 
-@app.route("/api/solutions/", methods=['GET', 'POST'], defaults={'id': None, 'task_id': None, 'people_id': None, 'status': None, 'github_link': None})
-def req_solutions(id, task_id, people_id, status, github_link):
+@app.route("/api/solutions/")
+def req_solutions():
     if flask.request.method == 'GET':
         return calc_request('solutions', flask.request.args.to_dict())
     elif flask.request.method == 'POST':
         adding_el_to_table('solutions', flask.request.args.to_dict())
+    return str({"response": 1})
 
 
 if __name__ == '__main__':
     create_db("syspro.db")
-    app.run(debug=True)
+    app.run()
