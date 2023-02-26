@@ -11,6 +11,8 @@ def get_hash_password(s):
 
 
 def check_hash(cur_hash):
+    if not cur_hash:
+        return False
     dbcon = sqlite3.connect('syspro.db')
     dbcur = dbcon.cursor()
     dbcur.execute(f"SELECT password FROM teachers")
@@ -43,7 +45,7 @@ def calc_request(s, args):
 
 
 def delete_el(s, args):
-    if not (args['hash']) or not (check_hash(args['hash'])):
+    if not check_hash(args['hash']):
         flask.abort(403)
     params = []
     for key, val in args.items():
@@ -96,7 +98,7 @@ def add_update_solution(args):
 
 
 def adding_el_to_table(s, args):
-    if not (args['hash']) or not (check_hash(args['hash'])):
+    if not check_hash(args['hash']):
         flask.abort(403)
     dbcon = sqlite3.connect('syspro.db')
     dbcur = dbcon.cursor()
@@ -245,14 +247,15 @@ def req_people():
 
 @app.route("/api/teachers/", methods=['GET', 'POST'])
 def req_teachers():
+    dic = flask.request.form.to_dict
     if flask.request.form.get('password'):
-        flask.request.form.to_dict['password'] = str(get_hash_password(flask.request.form.get('password')))
+        dic['password'] = str(get_hash_password(flask.request.form.get('password')))
     if flask.request.form.get('del') and flask.request.method == 'POST':
-        delete_el('teachers', flask.request.form.to_dict())
+        delete_el('teachers', dic)
     elif flask.request.method == 'GET':
         return calc_request('teachers', flask.request.args.to_dict())
     elif flask.request.method == 'POST':
-        adding_el_to_table('teachers', flask.request.form.to_dict())
+        adding_el_to_table('teachers', dic)
     return str({"response": 1})
 
 
