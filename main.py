@@ -3,9 +3,9 @@ import datetime
 import hashlib
 import json
 import sqlite3
-import time
 
 import flask
+from flask_cors import CORS
 
 
 def get_hash_password(s):
@@ -199,6 +199,7 @@ def create_db(name):
             github_link TEXT,
             updates TEXT NOT NULL DEFAULT '{"updates": []}',
             PRIMARY KEY (id),
+            PRIMARY KEY (task_id, people_id)
             FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE,
             FOREIGN KEY (people_id) REFERENCES people (id) ON DELETE CASCADE
         )""")
@@ -279,6 +280,26 @@ def req_solutions():
     return str({"response": 1})
 
 
+@app.route("/api/course/get.solutions/<int:course_id>")
+def course_solutions(course_id):
+    connection = sqlite3.connect('syspro.db')
+    res = connection.execute(f'SELECT solutions.people_id, solutions.id, solutions.status, solutions.updates, tasks.id FROM solutions JOIN tasks ON solutions.task_id = tasks.id WHERE tasks.course_id = {course_id};').fetchall()
+    items = dict()
+    for el in res:
+        people_id = el[0]
+        solution_id = el[1]
+        status = el[2]
+        updates = el[3]
+        task_id = el[4]
+
+        if (item := items.get(str(people_id))) is not None:
+            item.append(json.dumps({'solution_id': solution_id, 'status': status, 'updates': updates, 'task_id': task_id}))
+        else:
+            items[str(people_id)] = [json.dumps({'solution_id': solution_id, 'status': status, 'updates': updates, 'task_id': task_id})]
+    return ''.join(['{', f'"items": [{json.dumps(items)}]', '}'])
+
+
 if __name__ == '__main__':
     create_db("syspro.db")
+    CORS(app)
     app.run()
